@@ -1,3 +1,4 @@
+
 # R-Type Instructions
 add x1, x2, x3      # x1 = x2 + x3
 sub x4, x5, x6      # x4 = x5 - x6
@@ -14,6 +15,7 @@ addi x1, x2, 10     # x1 = x2 + 10
 andi x3, x4, 255    # x3 = x4 AND 255
 ori x5, x6, 15      # x5 = x6 OR 15
 xori x7, x8, 128    # x7 = x8 XOR 128
+li x10, 0x100
 lw x9, 0(x10)       # x9 = Memory[x10 + 0]
 jalr x11, 0(x12)    # Jump to address in x12 + 0 and store return address in x11
 
@@ -27,7 +29,6 @@ blt x5, x6, label3  # If x5 < x6, jump to label3
 bge x7, x8, label4  # If x7 >= x8, jump to label4
 
 # U-Type Instructions
-li x1, 342          # load int
 lui x1, 0x12345     # Load upper immediate: x1 = 0x12345000
 auipc x2, 0x10      # Add upper immediate to PC: x2 = PC + 0x10000
 
@@ -60,3 +61,4 @@ label6:
 
 end:
     nop             # End of program
+

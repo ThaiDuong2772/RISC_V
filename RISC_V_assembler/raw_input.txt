@@ -11,14 +11,14 @@ addi x1, x2, 10
 andi x3, x4, 255    
 ori x5, x6, 15      
 xori x7, x8, 128    
+addi x10, x0, 0x100
 lw x9, 0(x10)       
-jalr x11, 0(x12)    
+jalr x11, x12, 0
 sw x1, 4(x2)        
 beq x1, x2, label1  
 bne x3, x4, label2  
 blt x5, x6, label3  
 bge x7, x8, label4  
-addi x1, x0, 342
 lui x1, 0x12345     
 auipc x2, 0x10      
 jal x0, label5

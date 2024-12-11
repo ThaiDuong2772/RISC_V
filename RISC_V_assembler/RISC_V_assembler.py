@@ -11,10 +11,10 @@ opcode = {
     "AUIPC" : "0010111"
 }
 
-R_TYPE = {"add", "sub", "xor", "or", "and", "sll", "srl", "slt", "sltu"}
-I_TYPE = {"addi", "xori", "ori", "andi", "slli", "srli", "slti", "sltiu", "lw", "jalr"}
+R_TYPE = {"add", "sub", "xor", "or", "and", "sll", "srl", "slt", "sltu", "sra"}
+I_TYPE = {"addi", "xori", "ori", "andi", "slli", "srli", "slti", "sltiu", "lw", "jalr", "srai"}
 S_TYPE = {"sw"}
-B_TYPE = {"beq", "bne", "blt", "bge"}
+B_TYPE = {"beq", "bne", "blt", "bge", "bltu", "bgeu"}
 U_TYPE = {"lui", "li", "auipc"}
 J_TYPE = {"jal"}
 
@@ -32,7 +32,11 @@ funct3 = {
     "lw": "010", "sw": "010", 
     "beq": "000", "bne" : "001",
     "blt" : "100", "bge" : "101",
-    "jalr" : "000"
+    "jalr" : "000",
+    "srai": "101",  
+    "sra": "101",   
+    "bltu": "110",  
+    "bgeu": "111"
 }
 
 funct7 = {
@@ -41,6 +45,8 @@ funct7 = {
     "and" : "0000000",
     "sll" : "0000000", "srl" : "0000000",
     "slt" : "0000000", "sltu" : "0000000",
+    "sra": "0100000",  
+    "srai": "0100000"
 }
 
 registers = {
@@ -61,66 +67,103 @@ def imm(x):
     if x.find("0x") != -1:
         i = bin(int(x[2:], 16))[2:].zfill(32)
         return i
+    elif int(x) < 0:
+        return to_twos_complement(int(x), 32)
     return bin(int(x))[2:].zfill(32)
 
-# format file
-
 with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\input.txt", "r") as ipf:
-    sample = ipf.readlines()
-line = []
-keys = []
-for i, word in enumerate(sample):
-    if word.find("j ") != -1:
-        keys = word.split()
-        keys[0] = "jal x0, "
-        word = keys[0] + keys[1] + "\n"
-    elif word.find("nop ") != -1:
-        word = "addi x0, x0, 0\n"
-    elif word.find("li ") != -1:
-        keys = word.split()
-        keys[0] = "addi "
-        keys[2] = " x0, " + keys[2]
-        word = keys[0] + keys[1] + keys[2] + "\n"
-    cmt = word.find("#")  
-    if cmt != -1:
-        if (cmt != 0):
-            fixed_line = word[:cmt] + "\n"       
-            line.append(fixed_line.lstrip())  
-    else:
-        line.append(word.lstrip()) 
-
-with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\raw_input.txt", "w") as ripf:   
-    ripf.writelines(line)
-
-with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\raw_input.txt", "r") as ripf:   
-    input = ripf.readlines()
+    input_lines = ipf.readlines()  # Rename the variable to avoid conflict
 
 # Dictionaries for Label
 labels = []
 pos_label = []
-count = 0
-for line in input:
-    pos = line.find(":")
-    if (pos != -1):
-        labels.append(line[:pos])
-        del(input[int(count/4)])
+lines = []
+
+# Remove comments from lines
+for line in input_lines:
+    cmt = line.find("#")
+    if cmt != -1:
+        if cmt != 0:
+            fixed_line = line[:cmt] + "\n"
+            if len(line) > 1:
+                lines.append(fixed_line.lstrip())
+    else:
+        if len(line) > 1:
+            lines.append(line.lstrip())
+print(lines)
+# Process labels and update lines
+count = 4
+for i in range(0, len(lines)):
+    pos = lines[i].find(":")
+    if pos != -1:
+        labels.append(lines[i][:pos])
+        count -= 4
         pos_label.append(count)
+        lines[i] = lines[i][pos+1:].lstrip()
     count += 4
 
-label_dict = {
-    labels[i] : pos_label[i] for i in range(0, len(labels))
-}
-# delete labels in raw_input
+label_dict = {labels[i]: pos_label[i] for i in range(len(labels))}
+
+# Write the cleaned lines to a new file
+with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\raw_input.txt", "w") as ripf:
+    ripf.writelines(lines)
+
+
+# format file
+
+with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\raw_input.txt", "r") as ripf:
+    sample = ripf.readlines()
+line = []
+keys = []
+for i, word in enumerate(sample):
+    if word.find("j ") == 0:
+        keys = word.split()
+        word = f"jal x0, {keys[1]}\n"  # Mặc định x0 cho lệnh `j`
+
+    elif word.find("jal ") == 0:
+        keys = word.split()
+        if "," not in keys[1]:  # Nếu thiếu `rd`, mặc định x1 là rd
+            word = f"jal x1, {keys[1]}\n"
+
+    elif word.find("jalr ") == 0:
+        keys = word.split()
+        # Đảm bảo trường hợp thiếu các tham số thì bổ sung mặc định
+        if len(keys) == 2:  # Chỉ có rd và rs1
+            word = f"jalr {keys[1]}, x1, 0\n"  # Mặc định offset = 0
+        elif len(keys) == 3:  # Có rd, rs1 nhưng thiếu offset
+            if "(" in keys[2]:  # Kiểm tra xem rs1 có trong dạng offset(rs1)
+                pos = keys[2].find("(")
+                offset = keys[2][:pos] if pos != -1 else "0"
+                rs1 = keys[2][pos + 1:keys[2].find(")")]
+                word = f"jalr {keys[1]} {rs1}, {offset}\n"
+            else:
+                word = f"jalr {keys[1]} {keys[2]} 0\n"  # Mặc định offset = 0 nếu không có
+        elif len(keys) == 4:  # Đã đủ cả rd, rs1, offset
+            word = f"jalr {keys[1]}, {keys[2]}, {keys[3]}\n"
+
+    elif word.find("nop") == 0:
+        word = "addi x0, x0, 0\n"
+    elif word.find("li ") == 0:
+        keys = word.split()
+        keys[0] = "addi "
+        keys[2] = " x0, " + keys[2]
+        word = keys[0] + keys[1] + keys[2] + "\n"
+    elif word.find("bgt ") == 0:
+        keys = word.split()
+        word = "blt" + " " + keys[2][:-1] + ", " + keys[1] + " " + keys[3] + "\n"
+    line.append(word.lstrip())
+
 with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\raw_input.txt", "w") as ripf:   
-    ripf.writelines(input)
+    ripf.writelines(line)
 
 def to_twos_complement(n, bits):
     if n < 0:
         n = (1 << bits) + n  # Chuyển số âm sang bù 2
     return bin(n)
 
-# format label to bin
+# format label to bin 
 def label_bin(label, pc):
+    print(label_dict[label], "-", pc)
     imm = label_dict[label] - pc
     if imm < 0:
         imm = to_twos_complement(imm, 32)[2:]
@@ -129,11 +172,12 @@ def label_bin(label, pc):
         imm = imm.zfill(32)
     return imm
 
-
+with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\raw_input.txt", "r") as ripf:
+    input = ripf.readlines()
 
 # assembler
 pc = 0
-output = []
+output_lines = []
 #immediate = []
 for line in input:
     word = line.split()
@@ -153,12 +197,12 @@ for line in input:
             pos = word[2].find("(")
             temp = word[2][:pos]
             rs1 = word[2][pos+1:(word[2].find(")"))]
+            print(imm(temp)[-12:])
             output = imm(temp)[-12:] + registers[rs1] + funct3[word[0]] + registers[word[1]] + opcode["I_LOAD"]
         elif word[0] == "jalr":
-            pos = word[2].find("(")
-            temp = int(word[2][:pos])
-            rs1 = word[2][pos+1:(word[2].find(")"))]
-            output = imm(str(temp))[-12:] + registers[rs1] + funct3[word[0]] + registers[word[1]] + opcode["JALR"]
+            output = imm(word[3])[-12:] + registers[word[2]] + funct3[word[0]] + registers[word[1]] + opcode["JALR"]
+        elif word[0] == "srai":
+            output = funct7[word[0]] + imm(word[3])[-5:] + registers[word[2]] + funct3[word[0]] + registers[word[1]] + opcode["I_TYPE"]
         else:
             output = imm(word[3])[-12:] + registers[word[2]] + funct3[word[0]] + registers[word[1]] + opcode["I_TYPE"]
     elif word[0] in S_TYPE:                 #S-TYPE
@@ -168,8 +212,9 @@ for line in input:
         output = imm(temp)[-12:-5] + registers[word[1]] + registers[rs1] + funct3[word[0]] + imm(temp)[-5:] + opcode["S_TYPE"]
     elif word[0] in B_TYPE:                 #B-TYPE
         i = label_bin(word[3], pc)
+        print(i)
         output = i[19] + i[21:27] + registers[word[2]] + registers[word[1]] + funct3[word[0]] + i[27:31] + i[20] + opcode["B_TYPE"]
-    elif word[0] in U_TYPE:                 #U-TYPE                              
+    elif word[0] in U_TYPE:                 #U-TYPE                             
         i = imm(word[2])
         if (word[0] == "auipc"):            #AUIPC
             output = i[-20:] + registers[word[1]] + opcode["AUIPC"]
@@ -177,12 +222,14 @@ for line in input:
             output = i[-20:] + registers[word[1]] + opcode["U_TYPE"]
     elif word[0] in J_TYPE:                 #J-TYPE
         i = label_bin(word[2], pc)
+        print(i)
         output = i[11] + i[21:31] + i[20] + i[12:20] + registers[word[1]] + opcode["J_TYPE"]
     else:
         output = bin(0)[2:].zfill(32)
-    with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\output.txt", "a") as opf:   
-        opf.writelines(output + "\n")           # write to output
+    output_lines.append(output + "\n")
     pc += 4
+with open("C:\\Users\\MSI\\Desktop\\RISC_v\\RISC_V_assembler\\output.txt", "w") as opf:   
+    opf.writelines(output_lines)           # write to output
     
     
    
