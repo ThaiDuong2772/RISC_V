@@ -1,64 +1,108 @@
+li x17, 1          # a7
+li x10, 15         # a0
+li x11, -5         # a1
+li x12, 5          # a2
+add x13, x10, x11  # a3 = a0 + a1
+sub x14, x10, x12  # a4 = a0 - a2 # expected: x13=x14=10
+addi x15, x15, 0   # a5 (no stall test)
+beq x14, x13, valid0
+jal x1, error
 
-# R-Type Instructions
-add x1, x2, x3      # x1 = x2 + x3
-sub x4, x5, x6      # x4 = x5 - x6
-xor x7, x8, x9      # x7 = x8 XOR x9
-or x10, x11, x12    # x10 = x11 OR x12
-and x13, x14, x15   # x13 = x14 AND x15
-sll x16, x17, x18   # x16 = x17 << x18 (shift left logical)
-srl x19, x20, x21   # x19 = x20 >> x21 (shift right logical)
-slt x22, x23, x24   # x22 = (x23 < x24) ? 1 : 0
-sltu x25, x26, x27  # x25 = (x26 < x27 unsigned) ? 1 : 0
+valid0:
+auipc x13, 1       # a3
+lui x14, 1         # a4
+addi x14, x14, 36  # a4 = 4128
+beq x14, x13, valid1
+jal x1, error
 
-# I-Type Instructions
-addi x1, x2, 10     # x1 = x2 + 10
-andi x3, x4, 255    # x3 = x4 AND 255
-ori x5, x6, 15      # x5 = x6 OR 15
-xori x7, x8, 128    # x7 = x8 XOR 128
-li x10, 0x100
-lw x9, 0(x10)       # x9 = Memory[x10 + 0]
-jalr x11, 0(x12)    # Jump to address in x12 + 0 and store return address in x11
+valid1:
+li x10, 0xc        # a0
+li x11, 0xa        # a1
+and x12, x11, x10  # a2 = a1 & a0
+or x13, x11, x10   # a3 = a1 | a0
+li x14, 0x6        # a4
+xor x15, x13, x14  # a5 = a3 ^ a4 # expected: x12=x15=8
+beq x12, x15, valid2
+jal x1, error
 
-# S-Type Instructions
-sw x1, 4(x2)        # Memory[x2 + 4] = x1
+valid2:
+andi x12, x10, 0xa # a2 = a0 & 0xa
+ori x13, x10, 0xa  # a3 = a0 | 0xa
+xori x15, x13, 0x6 # a5 = a3 ^ 0x6 # expected: x12=x15=8
+beq x12, x15, valid3
+jal x1, error
 
-# B-Type Instructions
-beq x1, x2, label1  # If x1 == x2, jump to label1
-bne x3, x4, label2  # If x3 != x4, jump to label2
-blt x5, x6, label3  # If x5 < x6, jump to label3
-bge x7, x8, label4  # If x7 >= x8, jump to label4
+valid3:
+li x10, 1          # a0
+li x11, -1         # a1
+slt x12, x10, x11  # a2 = (a0 < a1)
+sltu x13, x10, x11 # a3 = (unsigned a0 < a1)
+addi x12, x12, 1   # a2 = a2 + 1
+beq x12, x13, valid4
+jal x1, error
 
-# U-Type Instructions
-lui x1, 0x12345     # Load upper immediate: x1 = 0x12345000
-auipc x2, 0x10      # Add upper immediate to PC: x2 = PC + 0x10000
+valid4:
+slti x12, x10, -1  # a2 = (a0 < -1)
+sltiu x13, x10, -1 # a3 = (unsigned a0 < -1)
+addi x12, x12, 1   # a2 = a2 + 1
+beq x12, x13, valid5
+jal x1, error
 
-# J-Type Instructions
-j label5            # Jump to label5
-jal x3, label6      # Jump to label6 and store return address in x3
+valid5:
+li x11, 2          # a1
+sll x12, x10, x11  # a2 = a0 << a1
+srl x12, x12, x10  # a2 = a2 >> a0
+slli x13, x10, 2   # a3 = a0 << 2
+srli x13, x13, 1   # a3 = a3 >> 1 # expected: x12=x13=2
+beq x12, x13, valid6
+jal x1, error
 
-# Labels for branching
-label1:
-    addi x1, x1, 1  # x1 = x1 + 1
-    j end           # Jump to end
+valid6:
+li x10, -8         # a0
+li x14, 2          # a4
+srai x12, x10, 2   # a2 = a0 >> 2 (arithmetic)
+sra x13, x10, x14  # a3 = a0 >> a4 (arithmetic) # expected: x12=x13=-2
+beq x12, x13, valid7
+jal x1, error
 
-label2:
-    addi x2, x2, 2  # x2 = x2 + 2
-    j end           # Jump to end
+valid7:
+jal x1, procedure
+beq x15, x15, valid8 # expected: x15=x16=69
+jal x1, error
 
-label3:
-    addi x3, x3, 3  # x3 = x3 + 3
-    j end           # Jump to end
+valid8:
+addi x15, x15, 1   # a5 = 70, a6 = 69
+bne x15, x16, valid9
+jal x1, error
 
-label4:
-    addi x4, x4, 4  # x4 = x4 + 4
-    j end           # Jump to end
+valid9:
+li x16, -1         # a6
+bgt x15, x16, valid10
+jal x1, error
 
-label5:
-    nop             # No operation
+valid10:
+bltu x15, x16, valid11
+jal x1, error
 
-label6:
-    nop             # No operation
+valid11:
+bgeu x16, x15, valid12
+jal x1, error
 
-end:
-    nop             # End of program
+valid12:
+blt x16, x15, valid13
+jal x1, error
 
+valid13:
+bltu x16, x15, error
+jal x1, exit
+
+procedure:
+li x15, 69         # a5
+li x16, 69         # a6
+jalr x1, 0(x1)     # return
+
+error:
+li x17, -1         # a7 = -1
+
+exit:
+nop

@@ -1,36 +1,74 @@
-add x1, x2, x3      
-sub x4, x5, x6      
-xor x7, x8, x9      
-or x10, x11, x12    
-and x13, x14, x15   
-sll x16, x17, x18   
-srl x19, x20, x21   
-slt x22, x23, x24   
-sltu x25, x26, x27  
-addi x1, x2, 10     
-andi x3, x4, 255    
-ori x5, x6, 15      
-xori x7, x8, 128    
-addi x10, x0, 0x100
-lw x9, 0(x10)       
-jalr x11, x12, 0
-sw x1, 4(x2)        
-beq x1, x2, label1  
-bne x3, x4, label2  
-blt x5, x6, label3  
-bge x7, x8, label4  
-lui x1, 0x12345     
-auipc x2, 0x10      
-jal x0, label5
-jal x3, label6      
-addi x1, x1, 1  
-jal x0, end
-addi x2, x2, 2  
-jal x0, end
-addi x3, x3, 3  
-jal x0, end
-addi x4, x4, 4  
-jal x0, end
-addi x0, x0, 0
-addi x0, x0, 0
+addi x17, x0, 1
+addi x10, x0, 15
+addi x11, x0, -5
+addi x12, x0, 5
+add x13, x10, x11  
+sub x14, x10, x12  
+addi x15, x15, 0   
+beq x14, x13, valid0
+jal x1, error
+auipc x13, 1       
+lui x14, 1         
+addi x14, x14, 36  
+beq x14, x13, valid1
+jal x1, error
+addi x10, x0, 12
+addi x11, x0, 10
+and x12, x11, x10  
+or x13, x11, x10   
+addi x14, x0, 6
+xor x15, x13, x14  
+beq x12, x15, valid2
+jal x1, error
+andi x12, x10, 0xa 
+ori x13, x10, 0xa  
+xori x15, x13, 0x6 
+beq x12, x15, valid3
+jal x1, error
+addi x10, x0, 1
+addi x11, x0, -1
+slt x12, x10, x11  
+sltu x13, x10, x11 
+addi x12, x12, 1   
+beq x12, x13, valid4
+jal x1, error
+slti x12, x10, -1  
+sltiu x13, x10, -1 
+addi x12, x12, 1   
+beq x12, x13, valid5
+jal x1, error
+addi x11, x0, 2
+sll x12, x10, x11  
+srl x12, x12, x10  
+slli x13, x10, 2   
+srli x13, x13, 1   
+beq x12, x13, valid6
+jal x1, error
+addi x10, x0, -8
+addi x14, x0, 2
+srai x12, x10, 2   
+sra x13, x10, x14  
+beq x12, x13, valid7
+jal x1, error
+jal x1, procedure
+beq x15, x15, valid8 
+jal x1, error
+addi x15, x15, 1   
+bne x15, x16, valid9
+jal x1, error
+addi x16, x0, -1
+blt x16, x15, valid10
+jal x1, error
+bltu x15, x16, valid11
+jal x1, error
+bgeu x16, x15, valid12
+jal x1, error
+blt x16, x15, valid13
+jal x1, error
+bltu x16, x15, error
+jal x1, exit
+addi x15, x0, 69
+addi x16, x0, 69
+jalr x1, x1 0
+addi x17, x0, -1
 addi x0, x0, 0
