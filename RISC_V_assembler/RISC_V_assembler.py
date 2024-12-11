@@ -225,6 +225,7 @@ for line in input:
             output = i[-20:] + registers[word[1]] + opcode["U_TYPE"]
     elif word[0] in J_TYPE:                 #J-TYPE
         i = label_bin(word[2], pc)
+        print(registers[word[1]])
         output = i[11] + i[21:31] + i[20] + i[12:20] + registers[word[1]] + opcode["J_TYPE"]
     else:
         output = bin(0)[2:].zfill(32)

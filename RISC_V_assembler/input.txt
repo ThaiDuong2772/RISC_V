@@ -1,108 +1,29 @@
-li x17, 1          # a7
-li x10, 15         # a0
-li x11, -5         # a1
-li x12, 5          # a2
-add x13, x10, x11  # a3 = a0 + a1
-sub x14, x10, x12  # a4 = a0 - a2 # expected: x13=x14=10
-addi x15, x15, 0   # a5 (no stall test)
-beq x14, x13, valid0
-jal x1, error
-
-valid0:
-auipc x13, 1       # a3
-lui x14, 1         # a4
-addi x14, x14, 36  # a4 = 4128
-beq x14, x13, valid1
-jal x1, error
-
-valid1:
-li x10, 0xc        # a0
-li x11, 0xa        # a1
-and x12, x11, x10  # a2 = a1 & a0
-or x13, x11, x10   # a3 = a1 | a0
-li x14, 0x6        # a4
-xor x15, x13, x14  # a5 = a3 ^ a4 # expected: x12=x15=8
-beq x12, x15, valid2
-jal x1, error
-
-valid2:
-andi x12, x10, 0xa # a2 = a0 & 0xa
-ori x13, x10, 0xa  # a3 = a0 | 0xa
-xori x15, x13, 0x6 # a5 = a3 ^ 0x6 # expected: x12=x15=8
-beq x12, x15, valid3
-jal x1, error
-
-valid3:
-li x10, 1          # a0
-li x11, -1         # a1
-slt x12, x10, x11  # a2 = (a0 < a1)
-sltu x13, x10, x11 # a3 = (unsigned a0 < a1)
-addi x12, x12, 1   # a2 = a2 + 1
-beq x12, x13, valid4
-jal x1, error
-
-valid4:
-slti x12, x10, -1  # a2 = (a0 < -1)
-sltiu x13, x10, -1 # a3 = (unsigned a0 < -1)
-addi x12, x12, 1   # a2 = a2 + 1
-beq x12, x13, valid5
-jal x1, error
-
-valid5:
-li x11, 2          # a1
-sll x12, x10, x11  # a2 = a0 << a1
-srl x12, x12, x10  # a2 = a2 >> a0
-slli x13, x10, 2   # a3 = a0 << 2
-srli x13, x13, 1   # a3 = a3 >> 1 # expected: x12=x13=2
-beq x12, x13, valid6
-jal x1, error
-
-valid6:
-li x10, -8         # a0
-li x14, 2          # a4
-srai x12, x10, 2   # a2 = a0 >> 2 (arithmetic)
-sra x13, x10, x14  # a3 = a0 >> a4 (arithmetic) # expected: x12=x13=-2
-beq x12, x13, valid7
-jal x1, error
-
-valid7:
-jal x1, procedure
-beq x15, x15, valid8 # expected: x15=x16=69
-jal x1, error
-
-valid8:
-addi x15, x15, 1   # a5 = 70, a6 = 69
-bne x15, x16, valid9
-jal x1, error
-
-valid9:
-li x16, -1         # a6
-bgt x15, x16, valid10
-jal x1, error
-
-valid10:
-bltu x15, x16, valid11
-jal x1, error
-
-valid11:
-bgeu x16, x15, valid12
-jal x1, error
-
-valid12:
-blt x16, x15, valid13
-jal x1, error
-
-valid13:
-bltu x16, x15, error
-jal x1, exit
-
-procedure:
-li x15, 69         # a5
-li x16, 69         # a6
-jalr x1, 0(x1)     # return
-
-error:
-li x17, -1         # a7 = -1
-
-exit:
-nop
+li x10, 0x04038101       # Simulator has a bug and loads 0x04039101 = 67342593
+sw x10, 0(x0)           # Expected values
+lw x11, 0(x0)           # x11 = 67342593
+lh x12, 0(x0)           # x12 = -28415
+lh x13, 2(x0)           # x13 = 1027
+lb x14, 0(x0)           # x14 = 1
+lb x15, 1(x0)           # x15 = -111
+lb x16, 2(x0)           # x16 = 3
+lb x17, 3(x0)           # x17 = 4
+lhu x12, 0(x0)          # x12 = 37129
+lhu x13, 2(x0)          # x13 = 1027
+lbu x14, 0(x0)          # x14 = 1
+lbu x15, 1(x0)          # x15 = 145
+lbu x16, 2(x0)          # x16 = 3
+lbu x17, 3(x0)          # x17 = 4
+sh x12, 4(x0)           # Store halfword at address 4
+sh x13, 6(x0)           # 2*sh =sw
+sb x14, 8(x0)           # Store byte at address 8
+sb x15, 9(x0)           # Store byte at address 9
+sb x16, 10(x0)          # Store byte at address 10
+sb x17, 11(x0)          # 4*sb =sw
+beq x10, x11, valid     # Branch if x10 == x11
+jal x0, error           # Jump to error
+valid: 
+  jal x0, exit          # Jump to exit
+error: 
+  li x10, -1            # Load -1 into x10
+exit: 
+  nop                   # No operation
