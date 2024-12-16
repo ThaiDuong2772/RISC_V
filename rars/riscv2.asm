@@ -19,7 +19,7 @@ sb a4, 8(x0)
 sb a5, 9(x0)
 sb a6, 10(x0)
 sb a7, 11(x0)# 4*sb =sw
-beq a0,a1, valid
+beq a0, a1, valid
 jal error
 valid: jal exit 
 error: li a0 -1

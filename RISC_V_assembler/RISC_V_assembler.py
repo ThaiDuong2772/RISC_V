@@ -61,7 +61,18 @@ registers = {
     "x21": "10101", "x22": "10110", "x23": "10111",
     "x24": "11000", "x25": "11001", "x26": "11010",
     "x27": "11011", "x28": "11100", "x29": "11101",
-    "x30": "11110", "x31": "11111"
+    "x30": "11110", "x31": "11111",
+    "x0": "00000", "ra": "00001", "sp": "00010",
+    "gp": "00011", "tp": "00100", "t0": "00101",
+    "t1": "00110", "t2": "00111", "s0": "01000",
+    "s1": "01001", "a0": "01010", "a1": "01011",
+    "a2": "01100", "a3": "01101", "a4": "01110",
+    "a5": "01111", "a6": "10000", "a7": "10001",
+    "s2": "10010", "s3": "10011", "s4": "10100",
+    "s5": "10101", "s6": "10110", "s7": "10111",
+    "s8": "11000", "s9": "11001", "s10": "11010",
+    "s11": "11011", "t3": "11100", "t4": "11101",
+    "t5": "11110", "t6": "11111"
 }
 
 def imm(x):
@@ -93,12 +104,16 @@ for line in input_lines:
             lines.append(line.lstrip())
 
 # Process labels and update lines
-count = 4
+count = 0
+first_time = False
 for i in range(0, len(lines)):
     pos = lines[i].find(":")
     if pos != -1:
         labels.append(lines[i][:pos])
-        count -= 4
+        if pos == (len(lines[i].strip()) - 1) and first_time:
+            count -= 4
+        else:
+            first_time = True
         pos_label.append(count)
         lines[i] = lines[i][pos+1:].lstrip()
     count += 4
@@ -225,7 +240,6 @@ for line in input:
             output = i[-20:] + registers[word[1]] + opcode["U_TYPE"]
     elif word[0] in J_TYPE:                 #J-TYPE
         i = label_bin(word[2], pc)
-        print(registers[word[1]])
         output = i[11] + i[21:31] + i[20] + i[12:20] + registers[word[1]] + opcode["J_TYPE"]
     else:
         output = bin(0)[2:].zfill(32)
