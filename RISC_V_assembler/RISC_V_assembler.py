@@ -186,7 +186,7 @@ def to_twos_complement(n, bits):
 def label_bin(label, pc):
     imm = label_dict[label] - pc
     if imm < 0:
-        imm = to_twos_complement(imm, 32)[2:]
+        imm = to_twos_complement(imm - 4, 32)[2:]
     else:
         imm = bin(imm)[2:]
         imm = imm.zfill(32)

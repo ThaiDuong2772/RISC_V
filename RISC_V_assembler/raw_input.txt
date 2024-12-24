@@ -1,108 +1,32 @@
-addi x17, x0, 1
-addi x10, x0, 15
-addi x11, x0, -5
-addi x12, x0, 5
-add x13, x10, x11  
-sub x14, x10, x12  
-addi x15, x15, 0   
-beq x14, x13, valid0
-jal x1, error
-auipc x13, 1       
-lui x14, 1         
-addi x14, x14, 36  
-beq x14, x13, valid1
-jal x1, error
-addi x10, x0, 12
-addi x11, x0, 10
-and x12, x11, x10  
-or x13, x11, x10   
-addi x14, x0, 6
-xor x15, x13, x14  
-beq x12, x15, valid2
-jal x1, error
-andi x12, x10, 0xa 
-ori x13, x10, 0xa  
-xori x15, x13, 0x6 
-beq x12, x15, valid3
-jal x1, error
-addi x10, x0, 1
-addi x11, x0, -1
-slt x12, x10, x11  
-sltu x13, x10, x11 
-addi x12, x12, 1   
-beq x12, x13, valid4
-jal x1, error
-slti x12, x10, -1  
-sltiu x13, x10, -1 
-addi x12, x12, 1   
-beq x12, x13, valid5
-jal x1, error
-addi x11, x0, 2
-sll x12, x10, x11  
-srl x12, x12, x10  
-slli x13, x10, 2   
-srli x13, x13, 1   
-beq x12, x13, valid6
-jal x1, error
-addi x10, x0, -8
-addi x14, x0, 2
-srai x12, x10, 2   
-sra x13, x10, x14  
-beq x12, x13, valid7
-jal x1, error
-jal x1, procedure
-beq x15, x15, valid8 
-jal x1, error
-addi x15, x15, 1   
-bne x15, x16, valid9
-jal x1, error
-addi x16, x0, -1
-blt x16, x15, valid10
-jal x1, error
-bltu x15, x16, valid11
-jal x1, error
-bgeu x16, x15, valid12
-jal x1, error
-blt x16, x15, valid13
-jal x1, error
-bltu x16, x15, error
-jal x1, exit
-addi x15, x0, 69
-addi x16, x0, 69
-jalr x1, x1 0
-addi x17, x0, -1
+addi s0, x0, 0
+beq s0, x0, start
+jal x0, exit
+lui x10, 16440
+addi x10, x10, 257
+sw x10, 0(x0)           
+lw x11, 0(x0)           
+lh x12, 0(x0)           
+lh x13, 2(x0)           
+lb x14, 0(x0)           
+lb x15, 1(x0)           
+lb x16, 2(x0)           
+lb x17, 3(x0)           
+lhu x12, 0(x0)          
+lhu x13, 2(x0)          
+lbu x14, 0(x0)          
+lbu x15, 1(x0)          
+lbu x16, 2(x0)          
+lbu x17, 3(x0)          
+sh x12, 4(x0)           
+sh x13, 6(x0)           
+sb x14, 8(x0)           
+sb x15, 9(x0)           
+sb x16, 10(x0)          
+sb x17, 11(x0)          
+beq x10, x11, valid     
+jal x0, error           
+jal x0, exit          
+addi s0, x0, 1
+jal x0, begin
+addi x10, x0, -1
 addi x0, x0, 0
-lui x5, 65552
-addi x5, x5, 0
-sw x0, 0(x5)
-sw x1, 4(x5)
-sw x2, 8(x5)
-sw x3, 12(x5)
-sw x4, 16(x5)
-sw x5, 20(x5)
-sw x6, 24(x5)
-sw x7, 28(x5)
-sw x8, 32(x5)
-sw x9, 36(x5)
-sw x10, 40(x5)
-sw x11, 44(x5)
-sw x12, 48(x5)
-sw x13, 52(x5)
-sw x14, 56(x5)
-sw x15, 60(x5)
-sw x16, 64(x5)
-sw x17, 68(x5)
-sw x18, 72(x5)
-sw x19, 76(x5)
-sw x20, 80(x5)
-sw x21, 84(x5)
-sw x22, 88(x5)
-sw x23, 92(x5)
-sw x24, 96(x5)
-sw x25, 100(x5)
-sw x26, 104(x5)
-sw x27, 108(x5)
-sw x28, 112(x5)
-sw x29, 116(x5)
-sw x30, 120(x5)
-sw x31, 124(x5)

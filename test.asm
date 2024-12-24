@@ -1,7 +1,3 @@
-li s0, 0
-begin: beq s0, x0, start
-  jal x0, exit
-start:
 li x10, 0x04038101       # Simulator has a bug and loads 0x04039101 = 67342593
 sw x10, 0(x0)           # Expected values
 lw x11, 0(x0)           # x11 = 67342593
@@ -27,8 +23,6 @@ beq x10, x11, valid     # Branch if x10 == x11
 jal x0, error           # Jump to error
 valid: 
   jal x0, exit          # Jump to exit
-  li s0, 1
-  jal x0, begin
 error: 
   li x10, -1            # Load -1 into x10
 exit: 
