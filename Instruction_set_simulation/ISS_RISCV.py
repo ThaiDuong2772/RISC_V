@@ -1,9 +1,28 @@
 # Initialize registers and memory
-dataMemory = {0x10010000 + i * 4: 0 for i in range(128)}  # Predefined memory block
-pc = 0x10010000  # Program counter
+dataMemory = {0x10010000 + i * 4: 0 for i in range(1024)}  # Predefined memory block
+pc = 0x00400000  # Program counter
 reg = {i: 0 for i in range(32)}  # General-purpose registers
+for i in range(0, 32):
+    reg[i] = 0
 reg[2] = 2147479548  # Stack pointer (x2)
 reg[3] = 268468224   # Global pointer (x3)
+
+def format_imm(value):
+    try:
+        # Kiểm tra nếu là dạng nhị phân (bắt đầu bằng '0b' hoặc '0B')
+        if str(value).lower().startswith("0b"):
+            return int(value, 2)
+
+        # Kiểm tra nếu là dạng thập lục phân (bắt đầu bằng '0x' hoặc '0X')
+        elif str(value).lower().startswith("0x"):
+            return int(value, 16)
+
+        # Nếu không có tiền tố, mặc định kiểm tra là thập phân
+        else:
+            return int(str(value), 10)
+
+    except ValueError:
+        raise ValueError(f"Giá trị '{value}' không phải là số hợp lệ ở dạng bin, hex hoặc dec.")
 
 # Define execution logic for R-type instructions
 def executeR(funct3, funct7, rd, rs1, rs2):
@@ -32,26 +51,61 @@ def executeR(funct3, funct7, rd, rs1, rs2):
 def executeI(funct3, rd, rs1, imm):
     rs1_val = reg[rs1]
     if funct3 == "000":  # ADDI
-        reg[rd] = rs1_val + imm
+        reg[rd] = rs1_val + format_imm(imm)
     elif funct3 == "100":  # XORI
-        reg[rd] = rs1_val ^ imm
+        reg[rd] = rs1_val ^ format_imm(imm)
     elif funct3 == "110":  # ORI
-        reg[rd] = rs1_val | imm
+        reg[rd] = rs1_val | format_imm(imm)
     elif funct3 == "111":  # ANDI
-        reg[rd] = rs1_val & imm
+        reg[rd] = rs1_val & format_imm(imm)
     elif funct3 == "001":  # SLLI
-        reg[rd] = rs1_val << (imm & 0x1F)
+        reg[rd] = rs1_val << (format_imm(imm) & 0x1F)
     elif funct3 == "101":
-        if imm >> 10 == 0:  # SRLI
-            reg[rd] = (rs1_val >> (imm & 0x1F)) & 0xFFFFFFFF
+        if format_imm(imm) >> 10 == 0:  # SRLI
+            reg[rd] = (rs1_val >> (format_imm(imm) & 0x1F)) & 0xFFFFFFFF
         else:  # SRAI
-            reg[rd] = rs1_val >> (imm & 0x1F)
+            reg[rd] = rs1_val >> (format_imm(imm) & 0x1F)
+
+# Define execution logic for I-type Load instructions
+def executeI_L(funct3, rd, rs1, imm):
+    rs1_val = reg[rs1]
+    effective_address = rs1_val + format_imm(imm)
+
+    if funct3 == "000":  # LB (Load Byte)
+        if effective_address in dataMemory:
+            value = dataMemory[effective_address] & 0xFF
+            # Sign-extend to 32 bits
+            reg[rd] = value if value < 0x80 else value - 0x100
+        else:
+            print(f"Memory access error at address {hex(effective_address)}")
+    elif funct3 == "001":  # LH (Load Halfword)
+        if effective_address in dataMemory:
+            value = dataMemory[effective_address] & 0xFFFF
+            # Sign-extend to 32 bits
+            reg[rd] = value if value < 0x8000 else value - 0x10000
+        else:
+            print(f"Memory access error at address {hex(effective_address)}")
+    elif funct3 == "010":  # LW (Load Word)
+        if effective_address in dataMemory:
+            reg[rd] = dataMemory[effective_address] & 0xFFFFFFFF
+        else:
+            print(f"Memory access error at address {hex(effective_address)}")
+    elif funct3 == "100":  # LBU (Load Byte Unsigned)
+        if effective_address in dataMemory:
+            reg[rd] = dataMemory[effective_address] & 0xFF
+        else:
+            print(f"Memory access error at address {hex(effective_address)}")
+    elif funct3 == "101":  # LHU (Load Halfword Unsigned)
+        if effective_address in dataMemory:
+            reg[rd] = dataMemory[effective_address] & 0xFFFF
+        else:
+            print(f"Memory access error at address {hex(effective_address)}")
 
 # Define execution logic for S-type instructions
 def executeS(funct3, rs1, rs2, imm):
     rs1_val = reg[rs1]
     rs2_val = reg[rs2]
-    address = rs1_val + imm
+    address = rs1_val + format_imm(imm)
     if address in dataMemory:
         if funct3 == "000":  # SB (Store Byte)
             dataMemory[address] = rs2_val & 0xFF
@@ -68,13 +122,13 @@ def executeB(funct3, rs1, rs2, imm):
     rs1_val = reg[rs1]
     rs2_val = reg[rs2]
     if funct3 == "000" and rs1_val == rs2_val:  # BEQ
-        pc += imm
+        pc += format_imm(imm) - 4
     elif funct3 == "001" and rs1_val != rs2_val:  # BNE
-        pc += imm
+        pc += format_imm(imm) - 4
     elif funct3 == "100" and rs1_val < rs2_val:  # BLT
-        pc += imm
+        pc += format_imm(imm) - 4
     elif funct3 == "101" and rs1_val >= rs2_val:  # BGE
-        pc += imm
+        pc += format_imm(imm) - 4
 
 # Define execution logic for U-type instructions
 def executeU(opcode, rd, imm):
@@ -88,7 +142,7 @@ def executeU(opcode, rd, imm):
 def executeJ(rd, imm):
     global pc
     reg[rd] = pc + 4
-    pc += imm
+    pc += format_imm(imm) - 4
 
 # Decode and execute instructions
 def instDecoder(inst):
@@ -99,12 +153,14 @@ def instDecoder(inst):
     funct3 = inst[17:20]
     funct7 = inst[0:7]
     imm = None
-
     if opcode == "0110011":  # R-type
         executeR(funct3, funct7, rd, rs1, rs2)
-    elif opcode == "0010011":  # I-type
+    elif opcode == "0010011":  # I-type 
         imm = int(inst[0:12], 2) if inst[0] == "0" else -((1 << 12) - int(inst[0:12], 2))
         executeI(funct3, rd, rs1, imm)
+    elif opcode == "0000011":  # I-type 
+        imm = int(inst[0:12], 2) if inst[0] == "0" else -((1 << 12) - int(inst[0:12], 2))
+        executeI_L(funct3, rd, rs1, imm)
     elif opcode == "1100011":  # B-type
         imm = int(inst[0] + inst[24] + inst[1:7] + inst[20:24], 2) << 1
         if inst[0] == "1":
@@ -153,8 +209,9 @@ def simulate(inputFile, outputFile):
     if not instructions:
         print("No instructions to execute.")
         return
-    while pc < (len(instructions) * 4 + 0x10010000):
-        inst = instructions[int((pc - 0x10010000) / 4)]
+    while pc < (len(instructions) * 4 + 0x00400000):
+        inst = instructions[int((pc - 0x00400000) / 4)]
+        reg[0] = 0
         instDecoder(inst)
         pc += 4
     writeMemory(outputFile)

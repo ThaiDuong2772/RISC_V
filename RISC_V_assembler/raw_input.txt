@@ -1,32 +1,68 @@
 addi s0, x0, 0
 beq s0, x0, start
 jal x0, exit
+lui x5, 65552
+addi x5, x5, 0
 lui x10, 16440
 addi x10, x10, 257
-sw x10, 0(x0)           
-lw x11, 0(x0)           
-lh x12, 0(x0)           
-lh x13, 2(x0)           
-lb x14, 0(x0)           
-lb x15, 1(x0)           
-lb x16, 2(x0)           
-lb x17, 3(x0)           
-lhu x12, 0(x0)          
-lhu x13, 2(x0)          
-lbu x14, 0(x0)          
-lbu x15, 1(x0)          
-lbu x16, 2(x0)          
-lbu x17, 3(x0)          
-sh x12, 4(x0)           
-sh x13, 6(x0)           
-sb x14, 8(x0)           
-sb x15, 9(x0)           
-sb x16, 10(x0)          
-sb x17, 11(x0)          
+sw x10, 0(x5)           
+lw x11, 0(x5)           
+lh x12, 0(x5)           
+lh x13, 8(x5)           
+lb x14, 0(x5)           
+lb x15, 4(x5)           
+lb x16, 8(x5)           
+lb x17, 12(x5)           
+lhu x12, 0(x5)          
+lhu x13, 8(x5)          
+lbu x14, 0(x5)          
+lbu x15, 4(x5)          
+lbu x16, 8(x5)          
+lbu x17, 12(x5)          
+sh x12, 16(x5)           
+sh x13, 24(x5)           
+sb x14, 32(x5)           
+sb x15, 36(x5)           
+sb x16, 40(x5)          
+sb x17, 44(x5)          
 beq x10, x11, valid     
 jal x0, error           
 jal x0, exit          
 addi s0, x0, 1
-jal x0, begin
 addi x10, x0, -1
+jal x0, begin
 addi x0, x0, 0
+lui x5, 65552
+addi x5, x5, 0
+sw x0, 0(x5)
+sw x1, 4(x5)
+sw x2, 8(x5)
+sw x3, 12(x5)
+sw x4, 16(x5)
+sw x5, 20(x5)
+sw x6, 24(x5)
+sw x7, 28(x5)
+sw x8, 32(x5)
+sw x9, 36(x5)
+sw x10, 40(x5)
+sw x11, 44(x5)
+sw x12, 48(x5)
+sw x13, 52(x5)
+sw x14, 56(x5)
+sw x15, 60(x5)
+sw x16, 64(x5)
+sw x17, 68(x5)
+sw x18, 72(x5)
+sw x19, 76(x5)
+sw x20, 80(x5)
+sw x21, 84(x5)
+sw x22, 88(x5)
+sw x23, 92(x5)
+sw x24, 96(x5)
+sw x25, 100(x5)
+sw x26, 104(x5)
+sw x27, 108(x5)
+sw x28, 112(x5)
+sw x29, 116(x5)
+sw x30, 120(x5)
+sw x31, 124(x5)
